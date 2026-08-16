@@ -25,7 +25,7 @@ class Movement(Base):
         nullable=False,
         index=True,
     )
-    date: Mapped[date] = mapped_column(
+    movement_date: Mapped[date] = mapped_column(
         Date,
         nullable=False,
         index=True,

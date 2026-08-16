@@ -31,7 +31,7 @@ def upgrade() -> None:
     op.create_table('stock_movement',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('item_id', sa.Integer(), nullable=False),
-    sa.Column('date', sa.Date(), nullable=False),
+    sa.Column('movement_date', sa.Date(), nullable=False),
     sa.Column('quantity', sa.Numeric(precision=12, scale=3), nullable=False),
     sa.Column('movement_type', sa.Enum('PURCHASE', 'SALE', 'CONSUME', name='movementtype'), nullable=False),
     sa.ForeignKeyConstraint(['item_id'], ['stock_item.id'], ),
