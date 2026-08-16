@@ -1,0 +1,19 @@
+[project]
+name = "stock-predict"
+version = "0.1.0"
+description = "Sistema de predição inteligente no controle de estoque"
+readme = "README.md"
+authors = [
+    { name = "João Vítor Florão" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "pydantic>=2.13.4",
+]
+
+[project.scripts]
+stock-predict = "stock_predict:main"
+
+[build-system]
+requires = ["uv_build>=0.12.3,<0.13.0"]
+build-backend = "uv_build"
