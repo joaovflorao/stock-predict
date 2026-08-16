@@ -15,7 +15,7 @@ class Movement(BaseModel):
     """ Movimentação normalizada """
     id: int
     item_id: int
-    date: date
+    movement_date: date
     quantity: Decimal
     movement_type: MovementType
 
