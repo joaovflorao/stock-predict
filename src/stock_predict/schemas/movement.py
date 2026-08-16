@@ -24,7 +24,7 @@ class Movement(BaseModel):
 
 class StockMovementRow(BaseModel):
     """ Dado bruto da movimentação sem normalização """
-    date: date = Field(..., alias="Data")
+    movement_date: date = Field(..., alias="Data")
     item_id: str = Field(..., alias="ID Item")
     description: str = Field(..., alias="Descrição Item")
     quantity: Decimal = Field(..., gt=0, max_digits=12, decimal_places=3, alias="Quantidade")
