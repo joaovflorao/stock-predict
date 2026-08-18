@@ -22,6 +22,14 @@ class Movement(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class MovementCreate(BaseModel):
+    """ Dados para persistir a movimentação """
+    item_id: int
+    movement_date: date
+    quantity: Decimal = Field(..., gt=0)
+    movement_type: MovementType
+
+
 class StockMovementRow(BaseModel):
     """ Dado bruto da movimentação sem normalização """
     movement_date: date = Field(..., alias="Data")
