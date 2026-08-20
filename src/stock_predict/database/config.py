@@ -1,6 +1,10 @@
+from pathlib import Path
 from sqlalchemy.engine import URL
 from pydantic import computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BASE_DIR = Path(__file__).resolve().parents[3]
 
 
 class Settings(BaseSettings):
@@ -12,7 +16,7 @@ class Settings(BaseSettings):
     database_port: int = 5432
     database_name: str
 
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=BASE_DIR / ".env")
 
     @computed_field
     @property
