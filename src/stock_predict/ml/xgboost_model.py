@@ -40,7 +40,7 @@ class XGBoostForecastModel(ForecastModel):
                 [history[-self.n_lags:]],
                 columns=[f"lag_{i}" for i in range(1, self.n_lags + 1)]
             )
-            prediction = float(self.model.predict(x)[0])
+            prediction = max(float(self.model.predict(x)[0]), 0.0)
             predictions_list.append(prediction)
             history.append(prediction)
 
