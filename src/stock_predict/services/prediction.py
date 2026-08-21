@@ -63,13 +63,13 @@ def run_full_analysis(
         item_id: int,
         granularity: Granularity,
         horizon: int,
-        mint_train_size: int = 8,
+        min_train_size: int = 8,
         model_name: Literal["baseline", "xgboost"] = "xgboost"
 ) -> dict:
     """ Executa a análise completa de um item numa única sessão no DB """
     series, frequency = get_demand_series(db, item_id, granularity)
 
-    comparison = compare_models(series, frequency, horizon, mint_train_size, MODEL_FACTORIES)
+    comparison = compare_models(series, frequency, horizon, min_train_size, MODEL_FACTORIES)
     rmse_by_model = {result.model_name: result.rmse for result in comparison}
 
     model_factory = MODEL_FACTORIES[model_name]
