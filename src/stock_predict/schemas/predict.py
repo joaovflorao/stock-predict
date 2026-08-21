@@ -1,6 +1,8 @@
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 from pydantic import BaseModel, Field
+from stock_predict.schemas.config import Granularity
 
 
 class PredictionResult(BaseModel):
@@ -22,3 +24,15 @@ class EvaluationResult(BaseModel):
     wape: float= Field(..., ge=0)
     mae: float= Field(..., ge=0)
     rmse: float= Field(..., ge=0)
+
+
+class SeriesRequest(BaseModel):
+    """  """
+    item_id: int
+    granularity: Granularity
+    horizon: int = Field(..., gt=0)
+    min_train_size: int = Field(8, gt=0)
+
+
+class PredictRequest(SeriesRequest):
+    model_name: Literal["baseline", "xgboost"] = "xgboost"
