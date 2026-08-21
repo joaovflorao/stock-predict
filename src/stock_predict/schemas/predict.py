@@ -14,6 +14,11 @@ class PredictionResult(BaseModel):
     upper_bound: Decimal
     confidence_level: float = Field(..., ge=0, le=100, description="Nível de confiança do resultado (%)")
     model_name: str
+    reliable: bool = Field(
+        True,
+        description="False quando o histórico do item é curto demais para o modelo escolhido, "
+                    "e a previsão foi calculada com base na demanda média histórica",
+    )
 
     model_config = {"from_attributes": True}
 
@@ -35,4 +40,4 @@ class SeriesRequest(BaseModel):
 
 
 class PredictRequest(SeriesRequest):
-    model_name: Literal["baseline", "xgboost"] = "xgboost"
+    model_name: Literal["baseline", "xgboost", "lstm"] = "xgboost"
