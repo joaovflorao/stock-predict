@@ -15,6 +15,13 @@ class ItemRepository:
             .first()
         )
 
+    def get_by_external_ids(self, external_ids: list[str]) -> list[Item]:
+        return (
+            self.db.query(Item)
+            .filter(Item.external_id.in_(external_ids))
+            .all()
+        )
+
     def create(self, item: ItemCreate) -> Item:
         db_item = Item(
             external_id=item.external_id,
@@ -24,6 +31,15 @@ class ItemRepository:
         self.db.commit()
         self.db.refresh(db_item)
         return db_item
+
+    def bulk_create(self, items: list[ItemCreate]) -> list[Item]:
+        db_items = [
+            Item(external_id=item.external_id, description=item.description)
+            for item in items
+        ]
+        self.db.bulk_save_objects(db_items, return_defaults=True)
+        self.db.commit()
+        return db_items
 
     def get_or_create(self, external_id: str, description: str) -> Item:
         existing_item = self.get_by_external_id(external_id)
