@@ -1,33 +1,18 @@
 import reflex as rx
+from fastapi import FastAPI
 
+from stock_predict.api.routes import router as prediction_router
 
-class ItemState(rx.State):
-    items: list[str] = []
+from frontend.pages.ingestion import ingestion_page
+from frontend.pages.opportunities import opportunities_page
+from frontend.pages.prediction import prediction_page
+from frontend.pages.recommendation import recommendation_page
 
-    def load_items(self):
-        self.items = [
-            "Produto 1",
-            "Produto 2",
-            "Produto 3",
-        ]
+fastapi_app = FastAPI()
+fastapi_app.include_router(prediction_router, prefix="/api")
 
-
-def index() -> rx.Component:
-    return rx.center(
-        rx.vstack(
-            rx.heading("Stock Predict"),
-            rx.button(
-                "Carregar Itens",
-                on_click=ItemState.load_items,
-            ),
-            rx.foreach(
-                ItemState.items,
-                lambda item: rx.text(item),
-            )
-        ),
-        height="100vh",
-    )
-
-
-app = rx.App()
-app.add_page(index)
+app = rx.App(api_transformer=fastapi_app)
+app.add_page(prediction_page, route="/")
+app.add_page(ingestion_page, route="/ingestion")
+app.add_page(recommendation_page, route="/recommendation")
+app.add_page(opportunities_page, route="/opportunities")
