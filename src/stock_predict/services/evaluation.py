@@ -91,10 +91,19 @@ def compare_models(
         min_train_size: int,
         model_factories: dict[str, Callable[[], ForecastModel]]
 ) -> list[EvaluationResult]:
-    """ Compara o desempenho dos modelos """
+    """
+        Compara o desempenho dos modelos
+
+        Modelos que exigem mais histórico do que a série disponível (ex.: LSTM com poucos períodos)
+        são ignorados na comparação, em vez de derrubar a chamada inteira
+    """
     results_list = []
     for model_name, factory in model_factories.items():
-        validation = walk_forward_validation(series, factory, horizon, min_train_size, frequency)
+        try:
+            validation = walk_forward_validation(series, factory, horizon, min_train_size, frequency)
+        except ValueError:
+            continue
+
         results_list.append(
             EvaluationResult(
                 model_name=model_name,

@@ -1,3 +1,6 @@
+from datetime import date
+from decimal import Decimal
+
 import pandas as pd
 
 from stock_predict.models.movement import Movement
@@ -38,6 +41,26 @@ def movements_to_dataframe(movements: list[Movement]) -> pd.DataFrame:
 def filter_demand_movements(df: pd.DataFrame) -> pd.DataFrame:
     """ Filtra os tipos de movimento considerados """
     return df[df["movement_type"].isin(DEMAND_MOVEMENT_TYPES)]
+
+
+def calculate_current_stock(movements: list[Movement], as_of_date: date | None = None) -> Decimal:
+    """
+        Calcula o saldo de estoque de um item a partir do histórico de movimentações
+
+        Compras somam ao saldo, vendas e consumo subtraem. Se `as_of_date` for informado,
+        movimentações posteriores a essa data são ignoradas.
+    """
+    balance = Decimal("0")
+    for move in movements:
+        if as_of_date and move.movement_date > as_of_date:
+            continue
+
+        if move.movement_type == MovementType.PURCHASE:
+            balance += move.quantity
+        else:
+            balance -= move.quantity
+
+    return balance
 
 
 def build_time_series(
