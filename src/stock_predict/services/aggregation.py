@@ -17,6 +17,10 @@ GRANULARITY_TO_PANDAS_FREQ = {
 }
 
 
+def granularity_to_frequency(granularity: Granularity) -> str:
+    return GRANULARITY_TO_PANDAS_FREQ[granularity]
+
+
 def movements_to_dataframe(movements: list[Movement]) -> pd.DataFrame:
     """ Converte a lista de Movement em um pandas DataFrame """
     return pd.DataFrame(
@@ -59,7 +63,7 @@ def build_time_series(
     df["movement_date"] = pd.to_datetime(df["movement_date"])
     df["quantity"] = df["quantity"].astype(float)
 
-    frequency = GRANULARITY_TO_PANDAS_FREQ[granularity]
+    frequency = granularity_to_frequency(granularity)
     series = (
         df.set_index("movement_date")["quantity"]
         .resample(frequency)
