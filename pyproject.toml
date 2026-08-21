@@ -9,6 +9,7 @@ authors = [
 requires-python = ">=3.14"
 dependencies = [
     "alembic>=1.19.1",
+    "fastapi>=0.141.1",
     "numpy>=2.5.2",
     "pandas>=3.0.5",
     "pandas-stubs~=3.0.5",
