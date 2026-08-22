@@ -39,12 +39,21 @@ def ingest_movement(raw_rows: list[StockMovementRow], db: Session) -> dict:
     item_repo = ItemRepository(db)
     movement_repo = MovementRepository(db)
 
-    unique_items = {}
+    unique_items: dict[str, str] = {}
     for row in raw_rows:
-        unique_items.setdefault(row.item_id, row.description)
+        if row.description and not unique_items.get(row.item_id):
+            unique_items[row.item_id] = row.description
+        else:
+            unique_items.setdefault(row.item_id, row.description)
 
     external_ids = list(unique_items.keys())
     existing_items = item_repo.get_by_external_ids(external_ids)
+
+    for item in existing_items:
+        description = unique_items.get(item.external_id, "")
+        if not item.description and description:
+            item.description = description
+    db.commit()
 
     items_by_external_ids = {item.external_id: item.id for item in existing_items}
     missing_external_ids = [

@@ -1,3 +1,4 @@
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from stock_predict.models.item import Item
@@ -55,3 +56,15 @@ class ItemRepository:
 
     def list_all(self) -> list[Item]:
         return self.db.query(Item).all()
+
+    def search(self, query: str, limit: int = 30) -> list[Item]:
+        q = self.db.query(Item).order_by(Item.id)
+        if query:
+            pattern = f"%{query}%"
+            q = q.filter(
+                or_(
+                    Item.external_id.ilike(pattern),
+                    Item.description.ilike(pattern),
+                )
+            )
+        return q.limit(limit).all()
