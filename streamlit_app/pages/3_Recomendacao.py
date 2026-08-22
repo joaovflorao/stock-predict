@@ -5,7 +5,7 @@ from stock_predict.schemas.config import Granularity
 from stock_predict.schemas.recommendation import PurchaseRecommendationBulkRequest
 from stock_predict.services.recommendation import generate_purchase_recommendations
 
-from common import MODEL_LABELS, get_db
+from common import DATE_COLUMN_FORMAT, MODEL_LABELS, get_db
 
 
 st.header(":material/shopping_cart: Recomendação de Compra")
@@ -75,7 +75,7 @@ elif st.session_state.recommendation_result is not None:
                     "Períodos até esgotar": (
                         rec.periods_until_stockout if rec.periods_until_stockout is not None else None
                     ),
-                    "Próxima reposição": str(rec.next_reorder_date) if rec.next_reorder_date else "-",
+                    "Próxima reposição": rec.next_reorder_date,
                     "Confiável": "Sim" if rec.reliable else "Não",
                 }
                 for item, rec in recommendations
@@ -89,4 +89,9 @@ elif st.session_state.recommendation_result is not None:
         only_reorder = st.checkbox("Mostrar somente itens que precisam repor agora")
         filtered_df = df[df["Comprar agora"] == "Sim"] if only_reorder else df
 
-        st.dataframe(filtered_df, hide_index=True, width="stretch")
+        st.dataframe(
+            filtered_df,
+            hide_index=True,
+            width="stretch",
+            column_config={"Próxima reposição": st.column_config.DateColumn(format=DATE_COLUMN_FORMAT)},
+        )

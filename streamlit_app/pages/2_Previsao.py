@@ -5,8 +5,9 @@ import streamlit as st
 from stock_predict.schemas.config import Granularity
 from stock_predict.services.prediction import run_full_analysis
 
-from common import MODEL_LABELS, get_db, item_selector
+from common import DATE_COLUMN_FORMAT, MODEL_LABELS, PT_BR_TIME_FORMAT_LOCALE, get_db, item_selector
 
+alt.renderers.set_embed_options(timeFormatLocale=PT_BR_TIME_FORMAT_LOCALE)
 
 st.header(":material/trending_up: Previsão de Demanda")
 
@@ -85,7 +86,10 @@ elif st.session_state.prediction_result:
             layers.append(
                 alt.Chart(hist_df)
                 .mark_line(color="#2b8a3e", point=True)
-                .encode(x=alt.X("period:T", title="Período"), y=alt.Y("value:Q", title="Quantidade"))
+                .encode(
+                    x=alt.X("period:T", title="Período", axis=alt.Axis(format="%d/%m/%Y")),
+                    y=alt.Y("value:Q", title="Quantidade"),
+                )
             )
         if not forecast_df.empty:
             layers.append(
@@ -123,4 +127,9 @@ elif st.session_state.prediction_result:
                 for p in predictions
             ]
         )
-        st.dataframe(predictions_df, hide_index=True, width="stretch")
+        st.dataframe(
+            predictions_df,
+            hide_index=True,
+            width="stretch",
+            column_config={"Período": st.column_config.DateColumn(format=DATE_COLUMN_FORMAT)},
+        )
