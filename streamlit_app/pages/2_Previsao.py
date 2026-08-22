@@ -16,7 +16,13 @@ col1, col2, col3 = st.columns(3)
 with col1:
     granularity_label = st.selectbox("Granularidade", options=[g.value for g in Granularity], index=1)
 with col2:
-    horizon = st.number_input("Horizonte (períodos à frente)", min_value=1, value=4, step=1)
+    horizon = st.number_input(
+        "Períodos a prever",
+        min_value=1,
+        value=4,
+        step=1,
+        help="Quantos períodos à frente prever, na granularidade escolhida.",
+    )
 with col3:
     model_name = st.selectbox(
         "Modelo", options=list(MODEL_LABELS.keys()), format_func=lambda k: MODEL_LABELS[k]

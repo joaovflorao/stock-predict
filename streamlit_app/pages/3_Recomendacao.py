@@ -15,9 +15,21 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     granularity_label = st.selectbox("Granularidade", options=[g.value for g in Granularity], index=1)
 with col2:
-    horizon = st.number_input("Horizonte", min_value=1, value=4, step=1)
+    horizon = st.number_input(
+        "Períodos a prever",
+        min_value=1,
+        value=4,
+        step=1,
+        help="Quantos períodos à frente prever, na granularidade escolhida.",
+    )
 with col3:
-    lead_time_periods = st.number_input("Tempo de reposição (períodos)", min_value=1, value=2, step=1)
+    lead_time_periods = st.number_input(
+        "Prazo de entrega",
+        min_value=1,
+        value=2,
+        step=1,
+        help="Tempo entre fazer o pedido e a mercadoria chegar, em períodos da granularidade escolhida.",
+    )
 with col4:
     model_name = st.selectbox(
         "Modelo", options=list(MODEL_LABELS.keys()), format_func=lambda k: MODEL_LABELS[k]

@@ -15,13 +15,28 @@ col1, col2, col3, col4 = st.columns(4)
 with col1:
     granularity_label = st.selectbox("Granularidade", options=[g.value for g in Granularity], index=1)
 with col2:
-    horizon = st.number_input("Horizonte", min_value=1, value=4, step=1)
+    horizon = st.number_input(
+        "Períodos a prever",
+        min_value=1,
+        value=4,
+        step=1,
+        help="Quantos períodos à frente prever, na granularidade escolhida.",
+    )
 with col3:
     model_name = st.selectbox(
         "Modelo", options=list(MODEL_LABELS.keys()), format_func=lambda k: MODEL_LABELS[k]
     )
 with col4:
-    trend_threshold_pct = st.number_input("Limiar de variação (%)", min_value=0.0, value=5.0, step=0.5)
+    trend_threshold_pct = st.number_input(
+        "Variação mínima (%)",
+        min_value=0.0,
+        value=5.0,
+        step=0.5,
+        help=(
+            "Variação percentual mínima entre a demanda prevista e a histórica para "
+            "considerar o item em crescimento ou queda. Abaixo disso, é tratado como estável."
+        ),
+    )
 
 if "opportunities_result" not in st.session_state:
     st.session_state.opportunities_result = None
