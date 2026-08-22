@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -9,6 +10,15 @@ from stock_predict.schemas.predict import PredictRequest
 
 class PurchaseRecommendationRequest(PredictRequest):
     """ Parâmetros para calcular quando e quanto comprar de um item """
+    lead_time_periods: int = Field(..., gt=0, description="Tempo de reposição, em períodos da granularidade escolhida")
+
+
+class PurchaseRecommendationBulkRequest(BaseModel):
+    """ Parâmetros para calcular quando e quanto comprar de todos os itens """
+    granularity: Granularity
+    horizon: int = Field(..., gt=0)
+    min_train_size: int = Field(8, gt=0)
+    model_name: Literal["baseline", "xgboost", "lstm"] = "xgboost"
     lead_time_periods: int = Field(..., gt=0, description="Tempo de reposição, em períodos da granularidade escolhida")
 
 

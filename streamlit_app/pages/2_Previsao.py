@@ -25,20 +25,29 @@ with col3:
 if "prediction_result" not in st.session_state:
     st.session_state.prediction_result = None
     st.session_state.prediction_error = None
+    st.session_state.prediction_missing_item = False
 
-if st.button("Consultar", type="primary", disabled=item_id is None):
-    granularity = Granularity(granularity_label)
-    try:
-        with st.spinner("Calculando previsão..."):
-            with get_db() as db:
-                result = run_full_analysis(db, item_id, granularity, int(horizon), model_name=model_name)
-        st.session_state.prediction_result = result
-        st.session_state.prediction_error = None
-    except ValueError as exc:
+if st.button("Consultar", type="primary"):
+    if item_id is None:
+        st.session_state.prediction_missing_item = True
         st.session_state.prediction_result = None
-        st.session_state.prediction_error = str(exc)
+        st.session_state.prediction_error = None
+    else:
+        st.session_state.prediction_missing_item = False
+        granularity = Granularity(granularity_label)
+        try:
+            with st.spinner("Calculando previsão..."):
+                with get_db() as db:
+                    result = run_full_analysis(db, item_id, granularity, int(horizon), model_name=model_name)
+            st.session_state.prediction_result = result
+            st.session_state.prediction_error = None
+        except ValueError as exc:
+            st.session_state.prediction_result = None
+            st.session_state.prediction_error = str(exc)
 
-if st.session_state.prediction_error:
+if st.session_state.prediction_missing_item:
+    st.info("Selecione um item para começar.")
+elif st.session_state.prediction_error:
     st.error(st.session_state.prediction_error)
 elif st.session_state.prediction_result:
     result = st.session_state.prediction_result
@@ -109,5 +118,3 @@ elif st.session_state.prediction_result:
             ]
         )
         st.dataframe(predictions_df, hide_index=True, width="stretch")
-elif item_id is None:
-    st.info("Selecione um item para começar.")

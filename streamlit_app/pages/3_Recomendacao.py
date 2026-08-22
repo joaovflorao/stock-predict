@@ -1,15 +1,15 @@
+import pandas as pd
 import streamlit as st
 
 from stock_predict.schemas.config import Granularity
-from stock_predict.schemas.recommendation import PurchaseRecommendationRequest
-from stock_predict.services.recommendation import generate_purchase_recommendation
+from stock_predict.schemas.recommendation import PurchaseRecommendationBulkRequest
+from stock_predict.services.recommendation import generate_purchase_recommendations
 
-from common import MODEL_LABELS, get_db, item_selector
+from common import MODEL_LABELS, get_db
 
 
 st.header(":material/shopping_cart: Recomendação de Compra")
-
-item_id = item_selector(label="Item", key="recommendation_item")
+st.caption("Situação de estoque e reposição sugerida para todos os itens")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
@@ -27,19 +27,18 @@ if "recommendation_result" not in st.session_state:
     st.session_state.recommendation_result = None
     st.session_state.recommendation_error = None
 
-if st.button("Calcular", type="primary", disabled=item_id is None):
+if st.button("Calcular", type="primary"):
     try:
-        request = PurchaseRecommendationRequest(
-            item_id=item_id,
+        request = PurchaseRecommendationBulkRequest(
             granularity=Granularity(granularity_label),
             horizon=int(horizon),
             lead_time_periods=int(lead_time_periods),
             model_name=model_name,
         )
-        with st.spinner("Calculando recomendação..."):
+        with st.spinner("Calculando recomendações para todos os itens... isso pode levar um tempo."):
             with get_db() as db:
-                recommendation = generate_purchase_recommendation(db, request)
-        st.session_state.recommendation_result = recommendation
+                recommendations = generate_purchase_recommendations(db, request)
+        st.session_state.recommendation_result = recommendations
         st.session_state.recommendation_error = None
     except ValueError as exc:
         st.session_state.recommendation_result = None
@@ -47,30 +46,35 @@ if st.button("Calcular", type="primary", disabled=item_id is None):
 
 if st.session_state.recommendation_error:
     st.error(st.session_state.recommendation_error)
-elif st.session_state.recommendation_result:
-    result = st.session_state.recommendation_result
+elif st.session_state.recommendation_result is not None:
+    recommendations = st.session_state.recommendation_result
 
-    if not result.reliable:
-        st.warning("Histórico curto: recomendação estimada pela demanda média histórica.")
-
-    if result.should_reorder_now:
-        st.error("Comprar agora", icon=":material/warning:")
+    if not recommendations:
+        st.info("Nenhum item com histórico suficiente para calcular recomendações.")
     else:
-        st.success("Estoque OK, sem necessidade de compra imediata", icon=":material/check_circle:")
+        df = pd.DataFrame(
+            [
+                {
+                    "Item": item.description or "(sem descrição)",
+                    "Estoque atual": float(rec.current_stock),
+                    "Ponto de reposição": round(rec.reorder_point, 2),
+                    "Comprar agora": "Sim" if rec.should_reorder_now else "Não",
+                    "Quantidade sugerida": round(rec.recommended_order_quantity, 2),
+                    "Períodos até esgotar": (
+                        rec.periods_until_stockout if rec.periods_until_stockout is not None else None
+                    ),
+                    "Próxima reposição": str(rec.next_reorder_date) if rec.next_reorder_date else "-",
+                    "Confiável": "Sim" if rec.reliable else "Não",
+                }
+                for item, rec in recommendations
+            ]
+        )
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Estoque atual", f"{result.current_stock:.0f}")
-    col2.metric("Ponto de reposição", f"{result.reorder_point:.2f}")
-    col3.metric("Quantidade sugerida", f"{result.recommended_order_quantity:.2f}")
+        c1, c2 = st.columns(2)
+        c1.metric("Itens analisados", len(df))
+        c2.metric("Precisam repor agora", int((df["Comprar agora"] == "Sim").sum()))
 
-    col4, col5 = st.columns(2)
-    col4.metric(
-        "Períodos até esgotar o estoque",
-        result.periods_until_stockout if result.periods_until_stockout is not None else "-",
-    )
-    col5.metric(
-        "Próxima reposição estimada",
-        str(result.next_reorder_date) if result.next_reorder_date else "-",
-    )
-elif item_id is None:
-    st.info("Selecione um item para começar.")
+        only_reorder = st.checkbox("Mostrar somente itens que precisam repor agora")
+        filtered_df = df[df["Comprar agora"] == "Sim"] if only_reorder else df
+
+        st.dataframe(filtered_df, hide_index=True, width="stretch")

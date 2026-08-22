@@ -3,8 +3,14 @@ from decimal import Decimal
 import pandas as pd
 from sqlalchemy.orm import Session
 
+from stock_predict.models.item import Item
+from stock_predict.repositories.item_repository import ItemRepository
 from stock_predict.repositories.movement_repository import MovementRepository
-from stock_predict.schemas.recommendation import PurchaseRecommendation, PurchaseRecommendationRequest
+from stock_predict.schemas.recommendation import (
+    PurchaseRecommendation,
+    PurchaseRecommendationBulkRequest,
+    PurchaseRecommendationRequest,
+)
 from stock_predict.services.aggregation import calculate_current_stock
 from stock_predict.services.demand import get_demand_series
 from stock_predict.services.evaluation import walk_forward_validation
@@ -99,3 +105,31 @@ def generate_purchase_recommendation(db: Session, request: PurchaseRecommendatio
     series, frequency = get_demand_series(db, request.item_id, request.granularity)
 
     return compute_recommendation(series, frequency, current_stock, request)
+
+
+def generate_purchase_recommendations(
+        db: Session, request: PurchaseRecommendationBulkRequest
+) -> list[tuple[Item, PurchaseRecommendation]]:
+    """ Calcula a recomendação de compra de todos os itens que têm histórico de demanda """
+    items = ItemRepository(db).list_all()
+    movement_repo = MovementRepository(db)
+
+    results = []
+    for item in items:
+        series, frequency = get_demand_series(db, item.id, request.granularity)
+        if series.empty:
+            continue
+
+        current_stock = calculate_current_stock(movement_repo.get_by_item(item.id))
+        item_request = PurchaseRecommendationRequest(
+            item_id=item.id,
+            granularity=request.granularity,
+            horizon=request.horizon,
+            min_train_size=request.min_train_size,
+            model_name=request.model_name,
+            lead_time_periods=request.lead_time_periods,
+        )
+        recommendation = compute_recommendation(series, frequency, current_stock, item_request)
+        results.append((item, recommendation))
+
+    return results
